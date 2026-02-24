@@ -95,6 +95,29 @@ def test_convert_vti(vti_path):
     assert mesh == truth_r
 
 
+def test_image_data_extent_offset():
+    """Test that ImageData with a non-zero extent offset produces correct coordinates.
+
+    This is a regression test for https://github.com/pyvista/pyvista-xarray/issues/72
+    where image_data_to_dataset generated wrong coordinates when the VTK extent
+    did not start at zero (e.g., extent=(-10, 10, -10, 10, -10, 10)).
+    """
+    mesh = ImageData(
+        dimensions=(5, 4, 3),
+        spacing=(1.0, 2.0, 3.0),
+        origin=(0.5, 1.0, -1.0),
+    )
+    mesh.point_data["values"] = np.arange(mesh.n_points, dtype=float)
+
+    truth_r = mesh.cast_to_rectilinear_grid()
+    ds = pyvista_to_xarray(mesh)
+
+    assert np.allclose(ds["x"].values, truth_r.x)
+    assert np.allclose(ds["y"].values, truth_r.y)
+    assert np.allclose(ds["z"].values, truth_r.z)
+    assert np.array_equal(ds["values"].values.ravel(), mesh["values"].ravel())
+
+
 def test_convert_vts(vts_path):
     truth = pv.StructuredGrid(vts_path)
     ds = pyvista_to_xarray(truth)

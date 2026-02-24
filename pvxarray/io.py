@@ -32,9 +32,10 @@ def rectilinear_grid_to_dataset(mesh):
 
 def image_data_to_dataset(mesh):
     def gen_coords(i):
+        extent_offset = mesh.GetExtent()[2 * i] * mesh.spacing[i]
         coords = (
             np.cumsum(np.insert(np.full(mesh.dimensions[i] - 1, mesh.spacing[i]), 0, 0))
-            + mesh.origin[i]  # noqa: W503
+            + mesh.origin[i] + extent_offset  # noqa: W503
         )
         return coords
 
